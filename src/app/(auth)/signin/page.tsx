@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
-import { AuthCard } from '@/features/auth/components/AuthCard';
-
 export const metadata: Metadata = {
     title: 'ورود',
     robots: {
@@ -14,7 +12,7 @@ export const metadata: Metadata = {
 export default function LoginPage() {
     return (
         <Suspense>
-            <AuthCard mode="login" />
+            <p>ورود به حساب کاربری</p>
         </Suspense>
     );
 }
