@@ -18,21 +18,18 @@ export default function ErrorPage({ error, unstable_retry }: ErrorPageProps) {
         <main className="flex min-h-screen items-center justify-center bg-background px-6 py-16 text-foreground">
             <section className="w-full max-w-md space-y-6 text-center">
                 <div className="space-y-2">
-                    <p className="text-sm font-medium text-muted-foreground">
-                        Something went wrong
+                    <p className="text-xl font-semibold tracking-normal">
+                        خطایی رخ داده است
                     </p>
-                    <h1 className="text-3xl font-semibold tracking-normal">
-                        We could not load this part of Vitrin CMS.
-                    </h1>
                     <p className="text-sm leading-6 text-muted-foreground">
-                        Try again. If it keeps happening, refresh the page or
-                        come back in a moment.
+                        لطفاً دوباره تلاش کنید. اگر مشکل همچنان ادامه داشت، صفحه
+                        را بازنشانی کنید یا چند لحظه دیگر مجدداً امتحان کنید.
                     </p>
                 </div>
 
                 {error.digest ? (
                     <p className="rounded-lg border bg-muted px-3 py-2 font-mono text-xs text-muted-foreground">
-                        Error ID: {error.digest}
+                        شناسه خطا: {error.digest}
                     </p>
                 ) : null}
 
@@ -43,7 +40,7 @@ export default function ErrorPage({ error, unstable_retry }: ErrorPageProps) {
                     onClick={() => unstable_retry()}
                 >
                     <RotateCcw aria-hidden="true" />
-                    Try again
+                    تلاش مجدد
                 </Button>
             </section>
         </main>
