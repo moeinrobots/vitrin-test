@@ -1,19 +1,45 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono, Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import '../styles/globals.css';
 import { siteConfig } from '@/lib/site';
 import { cn } from '@/lib/utils';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-
-const geistSans = Geist({
-    variable: '--font-geist-sans',
-    subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-    variable: '--font-geist-mono',
-    subsets: ['latin'],
+const iranSans = localFont({
+    src: [
+        {
+            path: '../assets/fonts/ultra_light.ttf',
+            weight: '100',
+            style: 'normal',
+        },
+        {
+            path: '../assets/fonts/light.ttf',
+            weight: '300',
+            style: 'normal',
+        },
+        {
+            path: '../assets/fonts/regular.ttf',
+            weight: '400',
+            style: 'normal',
+        },
+        {
+            path: '../assets/fonts/medium.ttf',
+            weight: '500',
+            style: 'normal',
+        },
+        {
+            path: '../assets/fonts/bold.ttf',
+            weight: '700',
+            style: 'normal',
+        },
+        {
+            path: '../assets/fonts/black.ttf',
+            weight: '900',
+            style: 'normal',
+        },
+    ],
+    variable: '--font-iran-sans',
+    display: 'swap',
+    fallback: ['Tahoma', 'Arial', 'sans-serif'],
 });
 
 export const metadata: Metadata = {
@@ -41,16 +67,9 @@ export default function RootLayout({
 }>) {
     return (
         <html
-            lang="en"
-            className={cn(
-                'h-full',
-                'antialiased',
-                geistSans.variable,
-                geistMono.variable,
-                'font-sans',
-                'font-sans',
-                inter.variable,
-            )}
+            lang="fa"
+            dir="rtl"
+            className={cn('h-full antialiased font-sans', iranSans.variable)}
         >
             <body className="min-h-full flex flex-col">{children}</body>
         </html>
