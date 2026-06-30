@@ -1,4 +1,4 @@
-export interface UserType {
+export interface ProfileType {
     id: number;
     username: string;
     mobile_number: number;
