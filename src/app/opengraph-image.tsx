@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
-import { SharedOpenGraphImage } from '@/components/shared/opengraph-image';
-import { siteConfig } from '@/lib/site';
+import { SharedOpenGraphImage } from '@/shared/components/shared/opengraph-image';
+import { siteConfig } from '@/shared/lib/site';
 
 export const alt = siteConfig.name;
 export const size = {

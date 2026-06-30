@@ -1,38 +1,38 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import '../styles/globals.css';
-import { siteConfig } from '@/lib/site';
-import { cn } from '@/lib/utils';
+import '../shared/styles/globals.css';
+import { siteConfig } from '@/shared/lib/site';
+import { cn } from '@/shared/lib/utils';
 
 const iranSans = localFont({
     src: [
         {
-            path: '../assets/fonts/ultra_light.ttf',
+            path: '../shared/assets/fonts/ultra_light.ttf',
             weight: '100',
             style: 'normal',
         },
         {
-            path: '../assets/fonts/light.ttf',
+            path: '../shared/assets/fonts/light.ttf',
             weight: '300',
             style: 'normal',
         },
         {
-            path: '../assets/fonts/regular.ttf',
+            path: '../shared/assets/fonts/regular.ttf',
             weight: '400',
             style: 'normal',
         },
         {
-            path: '../assets/fonts/medium.ttf',
+            path: '../shared/assets/fonts/medium.ttf',
             weight: '500',
             style: 'normal',
         },
         {
-            path: '../assets/fonts/bold.ttf',
+            path: '../shared/assets/fonts/bold.ttf',
             weight: '700',
             style: 'normal',
         },
         {
-            path: '../assets/fonts/black.ttf',
+            path: '../shared/assets/fonts/black.ttf',
             weight: '900',
             style: 'normal',
         },

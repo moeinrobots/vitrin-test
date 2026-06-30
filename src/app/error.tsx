@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/shared/components/ui/button';
 
 type ErrorPageProps = {
     error: Error & { digest?: string };

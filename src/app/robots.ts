@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getAbsoluteUrl } from '@/lib/site';
+import { getAbsoluteUrl } from '@/shared/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
     return {
