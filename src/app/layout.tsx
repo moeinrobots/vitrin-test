@@ -1,8 +1,11 @@
-import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import '../shared/styles/globals.css';
-import { siteConfig } from '@/shared/lib/site';
 import { cn } from '@/shared/lib/utils';
+import { siteConfig } from '@/shared/lib/site';
+import { AppProvider } from '@/shared/providers/AppProvider';
+
+import '../shared/styles/globals.css';
+
+import type { Metadata } from 'next';
 
 const iranSans = localFont({
     src: [
@@ -69,9 +72,12 @@ export default function RootLayout({
         <html
             lang="fa"
             dir="rtl"
+            suppressHydrationWarning
             className={cn('h-full antialiased font-sans', iranSans.variable)}
         >
-            <body className="min-h-full flex flex-col">{children}</body>
+            <body className="min-h-full flex flex-col">
+                <AppProvider>{children}</AppProvider>
+            </body>
         </html>
     );
 }
