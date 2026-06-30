@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 
-import { createThemeSlice, type ThemeSlice } from './theme.slice';
+import { createCartSlice, type CartSlice } from './cart.slice';
 import { createUserSlice, type UserSlice } from './user.slice';
 
-export type StoreState = UserSlice & ThemeSlice;
+export type StoreState = UserSlice & CartSlice;
 
 export const useAppStore = create<StoreState>()((...args) => ({
     ...createUserSlice(...args),
-    ...createThemeSlice(...args),
+    ...createCartSlice(...args),
 }));
 
 export const useStore = useAppStore;
 
-export type { Theme, ResolvedTheme } from './theme.slice';
+export type { CartSlice, CartSyncStatus } from './cart.slice';
 export type { UserSlice } from './user.slice';
