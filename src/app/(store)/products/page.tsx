@@ -1,6 +1,7 @@
 import { getProducts } from '@/features/products/api/products.server';
-import { normalizeProductQuery } from '@/features/products/api/products.query';
 import { ProductList } from '@/features/products/components/ProductList';
+import { normalizeProductQuery } from '@/features/products/api/products.query';
+
 import type { ProductQuery } from '@/features/products/types/ProductList.types';
 
 type ProductPageProps = {
