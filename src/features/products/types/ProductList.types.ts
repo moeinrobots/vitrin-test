@@ -1,3 +1,5 @@
+import { allowedQueryKeys } from '../utils/PorductList.constants';
+
 // product list types
 export interface ProductResponse {
     count: number;
@@ -9,8 +11,8 @@ export interface ProductResponse {
 export interface ProductResult {
     hasSelected?: boolean;
     id: number;
-    image: MediaType;
-    code: string;
+    image: MediaType | null;
+    code: string | null;
     title: string;
     slug: string;
     stock_type: string;
@@ -23,11 +25,13 @@ export interface ProductResult {
     price: number;
     rating: number;
     comments_count: number;
-    price_notes: string;
-    excerpt: string;
+    price_notes: string | null;
+    excerpt: string | null;
     is_favorite: boolean;
-    brand_data: ProductBrand;
-    category_data: ProductCategory[];
+    brand?: ProductBrand | null;
+    brand_data?: ProductBrand | null;
+    categories?: ProductCategory[];
+    category_data?: ProductCategory[];
 }
 
 export interface MediaType {
@@ -101,3 +105,9 @@ export interface ProductQuery {
     updated_from?: QueryParamValue;
     updated_to?: QueryParamValue;
 }
+
+type ProductQueryKey = (typeof allowedQueryKeys)[number];
+
+export type NormalizedProductQuery = Partial<
+    Record<ProductQueryKey, string | number | boolean>
+>;
