@@ -1,8 +1,8 @@
 // product list types
 export interface ProductResponse {
     count: number;
-    next: string;
-    previous: string;
+    next: string | null;
+    previous: string | null;
     results: ProductResult[];
 }
 
