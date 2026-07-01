@@ -63,6 +63,44 @@ export const metadata: Metadata = {
     },
 };
 
+const testTheme = {
+    light: {
+        background: '#fefce8',
+        foreground: '#1c1917',
+        card: '#ffffff',
+        cardForeground: '#1c1917',
+        primary: '#dc2626',
+        primaryForeground: '#ffffff',
+        secondary: '#fde68a',
+        secondaryForeground: '#78350f',
+        muted: '#fef3c7',
+        mutedForeground: '#92400e',
+        accent: '#f97316',
+        accentForeground: '#ffffff',
+        border: '#fbbf24',
+        input: '#fbbf24',
+        ring: '#dc2626',
+    },
+    dark: {
+        background: '#1c1917',
+        foreground: '#fefce8',
+        card: '#292524',
+        cardForeground: '#fefce8',
+        primary: '#f97316',
+        primaryForeground: '#1c1917',
+        secondary: '#78350f',
+        secondaryForeground: '#fef3c7',
+        muted: '#44403c',
+        mutedForeground: '#fde68a',
+        accent: '#dc2626',
+        accentForeground: '#ffffff',
+        border: '#57534e',
+        input: '#57534e',
+        ring: '#f97316',
+    },
+    radius: '50%',
+};
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -76,7 +114,7 @@ export default function RootLayout({
             className={cn('h-full antialiased font-sans', iranSans.variable)}
         >
             <body className="min-h-full flex flex-col">
-                <AppProvider>{children}</AppProvider>
+                <AppProvider theme={testTheme}>{children}</AppProvider>
             </body>
         </html>
     );

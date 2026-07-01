@@ -3,9 +3,15 @@
 import { type ReactNode } from 'react';
 import { CartSyncProvider } from './CartSyncProvider';
 import { QueryProvider } from './QueryProvider';
+import { RuntimeThemeProvider } from './RuntimeThemeProvider';
 import { ThemeProvider } from './ThemeProvider';
 
-export function AppProvider({ children }: { children: ReactNode }) {
+type AppProviderProps = {
+    children: ReactNode;
+    theme?: unknown;
+};
+
+export function AppProvider({ children, theme }: AppProviderProps) {
     return (
         <ThemeProvider
             attribute="class"
@@ -14,7 +20,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
             disableTransitionOnChange
         >
             <QueryProvider>
-                <CartSyncProvider>{children}</CartSyncProvider>
+                <RuntimeThemeProvider theme={theme}>
+                    <CartSyncProvider>{children}</CartSyncProvider>
+                </RuntimeThemeProvider>
             </QueryProvider>
         </ThemeProvider>
     );
