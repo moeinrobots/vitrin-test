@@ -1,17 +1,15 @@
-import { ProductQuery } from '@/features/products/types/ProductList.types';
-import React from 'react';
+import { getProducts } from '@/features/products/api/products.server';
+import { normalizeProductQuery } from '@/features/products/api/products.query';
+import { ProductList } from '@/features/products/components/ProductList';
+import type { ProductQuery } from '@/features/products/types/ProductList.types';
 
-export default async function ProductPage(searchParams: ProductQuery) {
-    const params = await searchParams;
+type ProductPageProps = {
+    searchParams: Promise<ProductQuery>;
+};
 
-    //   const products = await getProducts({
-    //     page: Number(params.page ?? 1),
-    //     sort: params.sort ?? "newest",
-    //     category: params.category,
-    //   })
+export default async function ProductPage({ searchParams }: ProductPageProps) {
+    const query = normalizeProductQuery(await searchParams);
+    const products = await getProducts(query);
 
-    return (
-        <div>ProductList</div>
-        // <ProductList initialProducts={products}/>
-    );
+    return <ProductList initialData={products} initialQuery={query} />;
 }
