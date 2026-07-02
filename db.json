@@ -1,7 +1,8 @@
 {
     "config": {
         "siteName": "ویترین",
-        "logo": "https://static.vecteezy.com/system/resources/thumbnails/019/166/318/small/lion-head-lion-logo-symbol-gaming-logo-elegant-element-for-brand-abstract-symbols-vector.jpg",
+        "icon": "https://vitrin-store.ir/shop-resources/cKvifROQYh/shop-logos/1732178597_16936.png",
+        "logo": "https://vitrin-store.ir/shop-resources/cKvifROQYh/shop-logos/1732178597_16936.png",
         "theme": {
             "light": {
                 "background": "#f8fafc",
