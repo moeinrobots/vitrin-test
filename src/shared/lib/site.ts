@@ -1,6 +1,6 @@
 export const siteConfig = {
     name: process.env.SITE_NAME ?? 'ویترین',
-    description: 'به سایت ساز ویترین خوش آمدید',
+    description: 'پلتفرم سایت ساز ویترین',
     url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vitrin.com',
 };
 

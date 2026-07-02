@@ -97,11 +97,15 @@ const tokenAliases: Record<string, ThemeToken> = {
 export function createRuntimeThemeCss(theme: RuntimeTheme | null) {
     if (!theme) return null;
 
+    const commonVariables = normalizeVariables(theme.colors);
     const lightVariables = normalizeVariables({
-        ...theme.colors,
+        ...commonVariables,
         ...theme.light,
     });
-    const darkVariables = normalizeVariables(theme.dark);
+    const darkVariables = normalizeVariables({
+        ...commonVariables,
+        ...theme.dark,
+    });
     const blocks = [
         createCssBlock(':root:not(.dark)', lightVariables),
         createCssBlock('.dark', darkVariables),

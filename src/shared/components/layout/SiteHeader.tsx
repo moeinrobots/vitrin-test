@@ -19,6 +19,8 @@ type SiteHeaderProps = {
 };
 
 export function SiteHeader({ config }: SiteHeaderProps) {
+    const hasMegaMenu = config.layout.hasMegaMenu;
+
     return (
         <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
             <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
@@ -84,13 +86,44 @@ export function SiteHeader({ config }: SiteHeaderProps) {
                     className="flex gap-1 overflow-x-auto text-sm text-muted-foreground"
                 >
                     {navigationItems.map((item) => (
-                        <Link
+                        <div
                             key={item.href}
-                            href={item.href}
-                            className="shrink-0 rounded-lg px-3 py-2 transition-colors hover:bg-muted hover:text-foreground"
+                            className="group relative shrink-0"
                         >
-                            {item.label}
-                        </Link>
+                            <Link
+                                href={item.href}
+                                aria-haspopup={
+                                    hasMegaMenu && item.href === '/products'
+                                        ? 'menu'
+                                        : undefined
+                                }
+                                className="block rounded-lg px-3 py-2 transition-colors hover:bg-muted hover:text-foreground"
+                            >
+                                {item.label}
+                            </Link>
+                            {hasMegaMenu && item.href === '/products' ? (
+                                <div className="invisible absolute right-0 top-full hidden w-72 rounded-lg border bg-popover p-2 text-popover-foreground opacity-0 shadow-sm transition-opacity group-hover:visible group-hover:opacity-100 md:block">
+                                    <Link
+                                        href="/products?ordering=-created_date"
+                                        className="block rounded-md px-3 py-2 hover:bg-muted"
+                                    >
+                                        جدیدترین محصولات
+                                    </Link>
+                                    <Link
+                                        href="/products?has_discount=true"
+                                        className="block rounded-md px-3 py-2 hover:bg-muted"
+                                    >
+                                        محصولات تخفیف‌دار
+                                    </Link>
+                                    <Link
+                                        href="/products?in_stock=true"
+                                        className="block rounded-md px-3 py-2 hover:bg-muted"
+                                    >
+                                        محصولات موجود
+                                    </Link>
+                                </div>
+                            ) : null}
+                        </div>
                     ))}
                 </nav>
             </div>
