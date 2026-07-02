@@ -2,6 +2,15 @@ import localFont from 'next/font/local';
 import { cn } from '@/shared/lib/utils';
 import { siteConfig } from '@/shared/lib/site';
 import { AppProvider } from '@/shared/providers/AppProvider';
+import {
+    getInitialSiteConfig,
+    isProjectUnderMaintenance,
+} from '@/shared/lib/initial-config';
+import {
+    createRuntimeThemeCss,
+    normalizeRuntimeTheme,
+} from '@/shared/lib/theme-css';
+import { MaintenanceScreen } from '@/shared/components/shared/MaintenanceScreen';
 
 import '../shared/styles/globals.css';
 
@@ -45,67 +54,54 @@ const iranSans = localFont({
     fallback: ['Tahoma', 'Arial', 'sans-serif'],
 });
 
-export const metadata: Metadata = {
-    metadataBase: new URL(siteConfig.url),
-    title: siteConfig.name,
-    description: siteConfig.description,
-    openGraph: {
-        title: siteConfig.name,
-        description: siteConfig.description,
-        url: siteConfig.url,
-        siteName: siteConfig.name,
-        type: 'website',
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: siteConfig.name,
-        description: siteConfig.description,
-    },
-};
+export async function generateMetadata(): Promise<Metadata> {
+    const initialConfig = await getInitialSiteConfig();
+    const iconUrl = initialConfig.icon;
 
-const testTheme = {
-    light: {
-        background: '#f8fafc',
-        foreground: '#0f172a',
-        card: '#ffffff',
-        cardForeground: '#0f172a',
-        primary: '#2563eb',
-        primaryForeground: '#ffffff',
-        secondary: '#e2e8f0',
-        secondaryForeground: '#334155',
-        muted: '#f1f5f9',
-        mutedForeground: '#64748b',
-        accent: '#f97316',
-        accentForeground: '#ffffff',
-        border: '#e2e8f0',
-        input: '#e2e8f0',
-        ring: '#2563eb',
-    },
-    dark: {
-        background: '#020617',
-        foreground: '#f8fafc',
-        card: '#0f172a',
-        cardForeground: '#f8fafc',
-        primary: '#3b82f6',
-        primaryForeground: '#ffffff',
-        secondary: '#1e293b',
-        secondaryForeground: '#cbd5e1',
-        muted: '#1e293b',
-        mutedForeground: '#94a3b8',
-        accent: '#fb923c',
-        accentForeground: '#ffffff',
-        border: '#334155',
-        input: '#334155',
-        ring: '#3b82f6',
-    },
-    radius: '0.75rem',
-};
+    return {
+        metadataBase: new URL(siteConfig.url),
+        title: initialConfig.siteName,
+        description: initialConfig.description,
+        icons: iconUrl
+            ? {
+                  icon: [{ url: iconUrl }],
+                  shortcut: [iconUrl],
+                  apple: [{ url: iconUrl }],
+              }
+            : undefined,
+        openGraph: {
+            title: initialConfig.siteName,
+            description: initialConfig.description,
+            url: siteConfig.url,
+            siteName: initialConfig.siteName,
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: initialConfig.siteName,
+            description: initialConfig.description,
+        },
+    };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const initialConfig = await getInitialSiteConfig();
+    const runtimeThemeCss = createRuntimeThemeCss(
+        normalizeRuntimeTheme(initialConfig.theme),
+    );
+    const page = isProjectUnderMaintenance(initialConfig) ? (
+        <MaintenanceScreen
+            siteName={initialConfig.siteName}
+            message={initialConfig.maintenance.message}
+        />
+    ) : (
+        children
+    );
+
     return (
         <html
             lang="fa"
@@ -114,7 +110,13 @@ export default function RootLayout({
             className={cn('h-full antialiased font-sans', iranSans.variable)}
         >
             <body className="min-h-full flex flex-col">
-                <AppProvider theme={testTheme}>{children}</AppProvider>
+                {runtimeThemeCss ? (
+                    <style
+                        id="runtime-theme"
+                        dangerouslySetInnerHTML={{ __html: runtimeThemeCss }}
+                    />
+                ) : null}
+                <AppProvider theme={initialConfig.theme}>{page}</AppProvider>
             </body>
         </html>
     );

@@ -5,18 +5,13 @@ export async function getAuthQuery(searchParams: AuthSearchParams) {
 
     return {
         next: getFirstValue(params.next),
-        phone: getFirstValue(params.phone),
     };
 }
 
-export function getAuthHref(
-    pathname: string,
-    query: { next?: string; phone?: string },
-) {
+export function getAuthHref(pathname: string, query: { next?: string }) {
     const params = new URLSearchParams();
 
     if (query.next) params.set('next', query.next);
-    if (query.phone) params.set('phone', query.phone);
 
     const queryString = params.toString();
 

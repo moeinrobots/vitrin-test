@@ -13,7 +13,9 @@ import {
 } from '../api/products.query';
 import { ProductCard } from './ProductCard';
 import { getProductsClient } from '../api/products.client';
+import { cn } from '@/shared/lib/utils';
 
+import type { RuntimeLayoutConfig } from '@/shared/lib/initial-config';
 import type {
     NormalizedProductQuery,
     ProductResponse,
@@ -22,9 +24,14 @@ import type {
 type ProductListProps = {
     initialData: ProductResponse;
     initialQuery: NormalizedProductQuery;
+    layout: RuntimeLayoutConfig;
 };
 
-export function ProductList({ initialData, initialQuery }: ProductListProps) {
+export function ProductList({
+    initialData,
+    initialQuery,
+    layout,
+}: ProductListProps) {
     // hook
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -170,14 +177,21 @@ export function ProductList({ initialData, initialQuery }: ProductListProps) {
             ) : null}
 
             <div
-                className={
-                    productsQuery.isFetching
-                        ? 'grid grid-cols-2 gap-4 opacity-60 transition-opacity md:grid-cols-3 lg:grid-cols-4'
-                        : 'grid grid-cols-2 gap-4 transition-opacity md:grid-cols-3 lg:grid-cols-4'
-                }
+                className={cn(
+                    layout.productListView === 'list'
+                        ? 'grid gap-4'
+                        : 'grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4',
+                    'transition-opacity',
+                    productsQuery.isFetching && 'opacity-60',
+                )}
             >
                 {products?.results.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard
+                        key={product.id}
+                        product={product}
+                        fields={layout.productCardFields}
+                        view={layout.productListView}
+                    />
                 ))}
             </div>
 

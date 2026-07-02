@@ -1,24 +1,42 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, Star } from 'lucide-react';
+import { cn } from '@/shared/lib/utils';
+
+import type {
+    ProductCardField,
+    ProductListView,
+} from '@/shared/lib/initial-config';
 import type { ProductResult } from '../types/ProductList.types';
 
 type ProductCardProps = {
     product: ProductResult;
+    fields: ProductCardField[];
+    view: ProductListView;
 };
 
 const currencyFormatter = new Intl.NumberFormat('fa-IR');
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, fields, view }: ProductCardProps) {
     const imageUrl = product.image?.f;
     const hasDiscount = product.discount_percent > 0;
     const brandName = product.brand_data?.name ?? product.brand?.name;
+    const isListView = view === 'list';
 
     return (
-        <article className="group overflow-hidden rounded-lg border bg-card text-card-foreground transition-colors hover:border-foreground/20">
+        <article
+            className={cn(
+                'group overflow-hidden rounded-lg border bg-card text-card-foreground transition-colors hover:border-foreground/20',
+                isListView &&
+                    'grid grid-cols-[8rem_1fr] sm:grid-cols-[11rem_1fr]',
+            )}
+        >
             <Link
                 href={`/products/${product.slug}`}
-                className="relative block aspect-square bg-muted"
+                className={cn(
+                    'relative block aspect-square bg-muted',
+                    isListView && 'aspect-auto min-h-36',
+                )}
             >
                 {imageUrl ? (
                     <Image
@@ -57,45 +75,59 @@ export function ProductCard({ product }: ProductCardProps) {
                     </span>
                 </div>
 
-                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                    <span>{brandName ?? 'بدون برند'}</span>
-                    <span className="inline-flex items-center gap-1">
-                        <Star aria-hidden="true" className="size-3.5" />
-                        {currencyFormatter.format(product.rating || 0)}
-                    </span>
-                </div>
-
-                <div className="flex min-h-11 items-end justify-between gap-3">
-                    <div className="space-y-1">
-                        {hasDiscount ? (
-                            <p className="text-xs text-muted-foreground line-through">
-                                {currencyFormatter.format(
-                                    product.regular_price,
-                                )}
-                            </p>
+                {fields.includes('brand') || fields.includes('rating') ? (
+                    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                        {fields.includes('brand') ? (
+                            <span>{brandName ?? 'بدون برند'}</span>
+                        ) : (
+                            <span />
+                        )}
+                        {fields.includes('rating') ? (
+                            <span className="inline-flex items-center gap-1">
+                                <Star aria-hidden="true" className="size-3.5" />
+                                {currencyFormatter.format(product.rating || 0)}
+                            </span>
                         ) : null}
-                        <p className="text-sm font-semibold">
-                            {currencyFormatter.format(product.price)} تومان
-                        </p>
                     </div>
+                ) : null}
 
-                    {hasDiscount ? (
-                        <span className="rounded-md bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
-                            {currencyFormatter.format(product.discount_percent)}
-                            ٪
-                        </span>
-                    ) : null}
-                </div>
+                {fields.includes('price') ? (
+                    <div className="flex min-h-11 items-end justify-between gap-3">
+                        <div className="space-y-1">
+                            {hasDiscount && fields.includes('discount') ? (
+                                <p className="text-xs text-muted-foreground line-through">
+                                    {currencyFormatter.format(
+                                        product.regular_price,
+                                    )}
+                                </p>
+                            ) : null}
+                            <p className="text-sm font-semibold">
+                                {currencyFormatter.format(product.price)} تومان
+                            </p>
+                        </div>
 
-                <p
-                    className={
-                        product.in_stock
-                            ? 'text-xs text-emerald-600 dark:text-emerald-400'
-                            : 'text-xs text-muted-foreground'
-                    }
-                >
-                    {product.in_stock ? 'موجود' : 'ناموجود'}
-                </p>
+                        {hasDiscount && fields.includes('discount') ? (
+                            <span className="rounded-md bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
+                                {currencyFormatter.format(
+                                    product.discount_percent,
+                                )}
+                                ٪
+                            </span>
+                        ) : null}
+                    </div>
+                ) : null}
+
+                {fields.includes('stock') ? (
+                    <p
+                        className={
+                            product.in_stock
+                                ? 'text-xs text-emerald-600 dark:text-emerald-400'
+                                : 'text-xs text-muted-foreground'
+                        }
+                    >
+                        {product.in_stock ? 'موجود' : 'ناموجود'}
+                    </p>
+                ) : null}
             </div>
         </article>
     );

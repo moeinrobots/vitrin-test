@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
-import { AuthField, AuthInput } from '@/features/auth/components/AuthForm';
 import {
     AuthFooterLink,
     AuthPanel,
 } from '@/features/auth/components/AuthPanel';
 import { getAuthHref, getAuthQuery } from '@/features/auth/lib/auth-query';
-import { Button } from '@/shared/components/ui/button';
 import { AuthSearchParams } from '@/features/auth/types/auth.types';
+import { SignInMethodForm } from '@/features/auth/components/AuthFlowForms';
 
 export const metadata: Metadata = {
     title: 'ورود',
@@ -35,35 +34,7 @@ export default async function SignInPage({
                 />
             }
         >
-            <form action="/signin/otp" className="grid gap-4" method="get">
-                {next ? <input name="next" type="hidden" value={next} /> : null}
-                <AuthField id="phone" label="شماره موبایل">
-                    <AuthInput
-                        autoComplete="tel"
-                        dir="ltr"
-                        id="phone"
-                        inputMode="tel"
-                        name="phone"
-                        pattern="^09[0-9]{9}$"
-                        placeholder="09123456789"
-                        required
-                        type="tel"
-                    />
-                </AuthField>
-                <div className="grid gap-2">
-                    <Button className="h-11 w-full" type="submit">
-                        دریافت کد یکبار مصرف
-                    </Button>
-                    <Button
-                        className="h-11 w-full"
-                        formAction="/signin/pwd"
-                        type="submit"
-                        variant="outline"
-                    >
-                        ورود با رمز عبور
-                    </Button>
-                </div>
-            </form>
+            <SignInMethodForm next={next} />
         </AuthPanel>
     );
 }

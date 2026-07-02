@@ -1,9 +1,11 @@
 import { clientFetch } from '@/shared/lib/client-fetch';
+
+import { productQueryToApiQuery } from './products.query';
+
 import type {
     NormalizedProductQuery,
     ProductResponse,
 } from '../types/ProductList.types';
-import { productQueryToApiQuery } from './products.query';
 
 const PRODUCTS_ENDPOINT = '/api/products';
 
