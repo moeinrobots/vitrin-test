@@ -1,7 +1,7 @@
 {
     "config": {
         "siteName": "ویترین",
-        "logo": "/images/logo.png",
+        "logo": "https://static.vecteezy.com/system/resources/thumbnails/019/166/318/small/lion-head-lion-logo-symbol-gaming-logo-elegant-element-for-brand-abstract-symbols-vector.jpg",
         "theme": {
             "light": {
                 "background": "#f8fafc",
@@ -37,7 +37,7 @@
                 "input": "#334155",
                 "ring": "#3b82f6"
             },
-            "radius": "0.75rem"
+            "radius": "1rem"
         }
     }
 }
