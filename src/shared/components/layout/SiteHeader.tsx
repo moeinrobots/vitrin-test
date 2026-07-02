@@ -20,7 +20,7 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ config }: SiteHeaderProps) {
     return (
-        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80">
             <div className="mx-auto flex min-h-16 w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between gap-3">
                     <Link
