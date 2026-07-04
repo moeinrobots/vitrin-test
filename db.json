@@ -29,6 +29,28 @@
                 "permanent": false
             }
         ],
+        "sitemap": {
+            "enabled": true,
+            "includeStaticRoutes": true,
+            "includeProducts": true,
+            "entries": [
+                {
+                    "path": "/about",
+                    "changeFrequency": "monthly",
+                    "priority": 0.6
+                }
+            ],
+            "exclude": []
+        },
+        "robots": {
+            "rules": [
+                {
+                    "userAgent": "*",
+                    "allow": "/",
+                    "disallow": ["/api", "/signin", "/signup", "/panel"]
+                }
+            ]
+        },
         "maintenance": {
             "enabled": true,
             "scope": "pages",
