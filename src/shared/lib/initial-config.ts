@@ -2,6 +2,7 @@ import { cache } from 'react';
 
 import { siteConfig } from './site';
 import { serverFetch } from './server-fetch';
+import { normalizeSeoConfig, type SeoConfig } from './seo';
 
 import type { RuntimeTheme } from './theme-css';
 
@@ -32,6 +33,37 @@ export type PageAvailabilityConfig = {
     workingHours?: string;
 };
 
+export type SitemapChangeFrequency =
+    'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
+
+export type SitemapEntryConfig = {
+    path: string;
+    lastModified?: string;
+    changeFrequency?: SitemapChangeFrequency;
+    priority?: number;
+};
+
+export type SitemapConfig = {
+    enabled: boolean;
+    includeProducts: boolean;
+    includeStaticRoutes: boolean;
+    entries: SitemapEntryConfig[];
+    exclude: string[];
+};
+
+export type RobotsRuleConfig = {
+    userAgent: string | string[];
+    allow?: string | string[];
+    disallow?: string | string[];
+    crawlDelay?: number;
+};
+
+export type RobotsConfig = {
+    rules: RobotsRuleConfig[];
+    sitemap?: string | string[];
+    host?: string;
+};
+
 export type RuntimeLayoutConfig = {
     hasMegaMenu: boolean;
     productListView: ProductListView;
@@ -43,6 +75,10 @@ export type InitialSiteConfig = {
     description: string;
     logo?: string;
     icon?: string;
+    seo?: SeoConfig;
+    pagesSeo: Record<string, SeoConfig>;
+    sitemap: SitemapConfig;
+    robots: RobotsConfig;
     theme?: RuntimeTheme;
     layout: RuntimeLayoutConfig;
     redirects: SiteRedirectRule[];
@@ -88,6 +124,10 @@ export const getInitialSiteConfig = cache(
 
 export function isProjectUnderMaintenance(config: InitialSiteConfig) {
     return config.maintenance.enabled && config.maintenance.scope === 'all';
+}
+
+export function getPageSeo(config: InitialSiteConfig, pathname: string) {
+    return config.pagesSeo[normalizePathname(pathname)];
 }
 
 export function isPathUnderMaintenance(
@@ -152,25 +192,39 @@ function normalizeInitialSiteConfig(
     const site = getRecord(config.site);
     const layout = getRecord(config.layout);
     const maintenance = getRecord(config.maintenance);
+    const seoSource =
+        getRecord(site?.seo) ??
+        getRecord(config.seo) ??
+        getRecord(config.meta) ??
+        getRecord(config.metadata);
+    const siteName =
+        getString(site?.name) ?? getString(config.siteName) ?? siteConfig.name;
+    const description =
+        getString(site?.description) ??
+        getString(config.description) ??
+        siteConfig.description;
+    const logo = getString(site?.logo) ?? getString(config.logo);
+    const icon =
+        getString(site?.icon) ??
+        getString(config.icon) ??
+        getString(config.favicon) ??
+        getString(config.favIcon) ??
+        getString(config.appleIcon) ??
+        logo;
 
     return {
-        siteName:
-            getString(site?.name) ??
-            getString(config.siteName) ??
-            siteConfig.name,
-        description:
-            getString(site?.description) ??
-            getString(config.description) ??
-            siteConfig.description,
-        logo: getString(site?.logo) ?? getString(config.logo),
-        icon:
-            getString(site?.icon) ??
-            getString(config.icon) ??
-            getString(config.favicon) ??
-            getString(config.favIcon) ??
-            getString(config.appleIcon) ??
-            getString(site?.logo) ??
-            getString(config.logo),
+        siteName,
+        description,
+        logo,
+        icon,
+        seo: normalizeSeoConfig(seoSource, {
+            title: siteName,
+            description,
+            images: normalizeSeoImagesFromUrls([logo, icon]),
+        }),
+        pagesSeo: normalizePagesSeoConfig(config, seoSource),
+        sitemap: normalizeSitemapConfig(config.sitemap),
+        robots: normalizeRobotsConfig(config.robots),
         theme: getTheme(config),
         layout: normalizeLayoutConfig(layout),
         redirects: normalizeRedirects(config.redirects),
@@ -265,6 +319,13 @@ function getFallbackInitialSiteConfig(): InitialSiteConfig {
     return {
         siteName: siteConfig.name,
         description: siteConfig.description,
+        seo: normalizeSeoConfig(undefined, {
+            title: siteConfig.name,
+            description: siteConfig.description,
+        }),
+        pagesSeo: {},
+        sitemap: getFallbackSitemapConfig(),
+        robots: getFallbackRobotsConfig(),
         layout: {
             hasMegaMenu: false,
             productListView: 'grid',
@@ -277,6 +338,172 @@ function getFallbackInitialSiteConfig(): InitialSiteConfig {
             pages: [],
         },
     };
+}
+
+function getFallbackSitemapConfig(): SitemapConfig {
+    return {
+        enabled: true,
+        includeProducts: true,
+        includeStaticRoutes: true,
+        entries: [],
+        exclude: [],
+    };
+}
+
+function getFallbackRobotsConfig(): RobotsConfig {
+    return {
+        rules: [
+            {
+                userAgent: '*',
+                allow: '/',
+                disallow: ['/api', '/signin', '/signup'],
+            },
+        ],
+    };
+}
+
+function normalizePagesSeoConfig(
+    config: InitialConfigResponse,
+    seoSource: Record<string, unknown> | undefined,
+) {
+    const pageSeoSource =
+        config.pagesSeo ??
+        config.pageSeo ??
+        config.seoPages ??
+        config.metadataPages ??
+        seoSource?.pages ??
+        seoSource?.routes;
+    const pageSeoRecord = getRecord(pageSeoSource);
+
+    if (pageSeoRecord) {
+        return Object.entries(pageSeoRecord).reduce<Record<string, SeoConfig>>(
+            (pagesSeo, [path, seo]) => {
+                pagesSeo[normalizePathname(path)] = normalizeSeoConfig(seo);
+
+                return pagesSeo;
+            },
+            {},
+        );
+    }
+
+    if (!Array.isArray(pageSeoSource)) return {};
+
+    return pageSeoSource.reduce<Record<string, SeoConfig>>((pagesSeo, item) => {
+        const page = getRecord(item);
+        const path =
+            getString(page?.path) ??
+            getString(page?.page) ??
+            getString(page?.route) ??
+            getString(page?.url);
+
+        if (!path) return pagesSeo;
+
+        pagesSeo[normalizePathname(path)] = normalizeSeoConfig(page);
+
+        return pagesSeo;
+    }, {});
+}
+
+function normalizeSitemapConfig(value: unknown): SitemapConfig {
+    const sitemap = getRecord(value);
+    const entriesSource =
+        sitemap?.entries ?? sitemap?.routes ?? sitemap?.pages ?? sitemap?.urls;
+    const exclude =
+        getStringArray(sitemap?.exclude) ??
+        getStringArray(sitemap?.excluded) ??
+        [];
+
+    return {
+        enabled: getBoolean(sitemap?.enabled) ?? true,
+        includeProducts: getBoolean(sitemap?.includeProducts) ?? true,
+        includeStaticRoutes: getBoolean(sitemap?.includeStaticRoutes) ?? true,
+        entries: normalizeSitemapEntries(entriesSource),
+        exclude: exclude.map(normalizePathname),
+    };
+}
+
+function normalizeSitemapEntries(value: unknown): SitemapEntryConfig[] {
+    if (!Array.isArray(value)) return [];
+
+    return value.flatMap((item) => {
+        const entry = getRecord(item);
+        const path =
+            getString(item) ??
+            getString(entry?.path) ??
+            getString(entry?.url) ??
+            getString(entry?.loc) ??
+            getString(entry?.route);
+
+        if (!path) return [];
+
+        return [
+            {
+                path,
+                lastModified:
+                    getString(entry?.lastModified) ??
+                    getString(entry?.lastmod) ??
+                    getString(entry?.updatedAt) ??
+                    getString(entry?.updated_at),
+                changeFrequency: getSitemapChangeFrequency(
+                    entry?.changeFrequency ?? entry?.changefreq,
+                ),
+                priority: getPriority(entry?.priority),
+            },
+        ];
+    });
+}
+
+function normalizeRobotsConfig(value: unknown): RobotsConfig {
+    const robots = getRecord(value);
+    const rulesSource = robots?.rules ?? robots?.rule;
+    const rules = normalizeRobotsRules(rulesSource);
+
+    return {
+        rules: rules.length ? rules : getFallbackRobotsConfig().rules,
+        sitemap:
+            getString(robots?.sitemap) ??
+            getStringArray(robots?.sitemap) ??
+            getStringArray(robots?.sitemaps),
+        host: getString(robots?.host),
+    };
+}
+
+function normalizeRobotsRules(value: unknown): RobotsRuleConfig[] {
+    if (!Array.isArray(value)) {
+        const rule = normalizeRobotsRule(value);
+
+        return rule ? [rule] : [];
+    }
+
+    return value.flatMap((item) => {
+        const rule = normalizeRobotsRule(item);
+
+        return rule ? [rule] : [];
+    });
+}
+
+function normalizeRobotsRule(value: unknown): RobotsRuleConfig | null {
+    const rule = getRecord(value);
+    const userAgent =
+        getOptionalStringArray(rule?.userAgent) ??
+        getOptionalStringArray(rule?.user_agent) ??
+        getString(rule?.userAgent) ??
+        getString(rule?.user_agent) ??
+        '*';
+
+    return {
+        userAgent,
+        allow: getOptionalStringArray(rule?.allow) ?? getString(rule?.allow),
+        disallow:
+            getOptionalStringArray(rule?.disallow) ?? getString(rule?.disallow),
+        crawlDelay: getPositiveNumber(rule?.crawlDelay ?? rule?.crawl_delay),
+    };
+}
+
+function normalizeSeoImagesFromUrls(urls: Array<string | undefined>) {
+    const images = urls.flatMap((url) => (url ? [{ url }] : []));
+
+    return images.length ? images : undefined;
 }
 
 function getAvailabilityMode(value: unknown): PageAvailabilityMode {
@@ -323,6 +550,49 @@ function isProductCardField(value: string): value is ProductCardField {
     return DEFAULT_PRODUCT_CARD_FIELDS.includes(value as ProductCardField);
 }
 
+function getSitemapChangeFrequency(
+    value: unknown,
+): SitemapChangeFrequency | undefined {
+    const changeFrequency = getString(value);
+    const allowed: SitemapChangeFrequency[] = [
+        'always',
+        'hourly',
+        'daily',
+        'weekly',
+        'monthly',
+        'yearly',
+        'never',
+    ];
+
+    return allowed.includes(changeFrequency as SitemapChangeFrequency)
+        ? (changeFrequency as SitemapChangeFrequency)
+        : undefined;
+}
+
+function getPriority(value: unknown) {
+    const priority = getPositiveNumber(value);
+
+    if (priority === undefined) return undefined;
+
+    return Math.min(priority, 1);
+}
+
+function getPositiveNumber(value: unknown) {
+    if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+        return value;
+    }
+
+    if (typeof value === 'string') {
+        const numberValue = Number(value);
+
+        return Number.isFinite(numberValue) && numberValue >= 0
+            ? numberValue
+            : undefined;
+    }
+
+    return undefined;
+}
+
 function getStringArray(value: unknown) {
     if (!Array.isArray(value)) return [];
 
@@ -331,6 +601,12 @@ function getStringArray(value: unknown) {
 
         return stringValue ? [stringValue] : [];
     });
+}
+
+function getOptionalStringArray(value: unknown) {
+    const values = getStringArray(value);
+
+    return values.length ? values : undefined;
 }
 
 function getString(value: unknown) {

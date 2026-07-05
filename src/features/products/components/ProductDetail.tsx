@@ -12,6 +12,7 @@ import {
     CardTitle,
 } from '@/shared/components/ui/card';
 import { Separator } from '@/shared/components/ui/separator';
+import { getMediaAlt } from '@/shared/lib/seo';
 import type { ProductResult } from '../types/ProductList.types';
 import { ProductPurchasePanel } from './ProductPurchasePanel';
 
@@ -26,6 +27,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
     const thumbnails = product.image?.thumbnails ?? [];
     const categories = product.category_data ?? product.categories ?? [];
     const brandName = product.brand_data?.name ?? product.brand?.name;
+    const mainImageAlt = getMediaAlt(product.image, product.title);
 
     return (
         <main className="flex-1 bg-background">
@@ -53,7 +55,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
                                 {product.image?.f ? (
                                     <Image
                                         src={product.image.f}
-                                        alt={product.title}
+                                        alt={mainImageAlt}
                                         fill
                                         priority
                                         loading="eager"
@@ -70,21 +72,27 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
                             {thumbnails.length > 0 ? (
                                 <div className="grid grid-cols-5 gap-2">
-                                    {thumbnails.slice(0, 5).map((thumbnail) => (
-                                        <div
-                                            key={thumbnail.id}
-                                            className="relative aspect-square overflow-hidden rounded-lg border bg-muted"
-                                        >
-                                            <Image
-                                                src={thumbnail.f}
-                                                alt=""
-                                                fill
-                                                unoptimized
-                                                sizes="5rem"
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                    ))}
+                                    {thumbnails
+                                        .slice(0, 5)
+                                        .map((thumbnail, index) => (
+                                            <div
+                                                key={thumbnail.id}
+                                                className="relative aspect-square overflow-hidden rounded-lg border bg-muted"
+                                            >
+                                                <Image
+                                                    src={thumbnail.f}
+                                                    alt={getMediaAlt(
+                                                        thumbnail,
+                                                        product.title,
+                                                        index,
+                                                    )}
+                                                    fill
+                                                    unoptimized
+                                                    sizes="5rem"
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        ))}
                                 </div>
                             ) : null}
                         </div>

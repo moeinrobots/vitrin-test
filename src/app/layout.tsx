@@ -1,7 +1,6 @@
+import type { Metadata } from 'next';
 import localFont from 'next/font/local';
-import { cn } from '@/shared/lib/utils';
-import { siteConfig } from '@/shared/lib/site';
-import { AppProvider } from '@/shared/providers/AppProvider';
+
 import {
     getInitialSiteConfig,
     isProjectUnderMaintenance,
@@ -10,11 +9,12 @@ import {
     createRuntimeThemeCss,
     normalizeRuntimeTheme,
 } from '@/shared/lib/theme-css';
+import { cn } from '@/shared/lib/utils';
+import { createSeoMetadata } from '@/shared/lib/seo';
+import { AppProvider } from '@/shared/providers/AppProvider';
 import { MaintenanceScreen } from '@/shared/components/shared/MaintenanceScreen';
 
 import '../shared/styles/globals.css';
-
-import type { Metadata } from 'next';
 
 const iranSans = localFont({
     src: [
@@ -57,11 +57,18 @@ const iranSans = localFont({
 export async function generateMetadata(): Promise<Metadata> {
     const initialConfig = await getInitialSiteConfig();
     const iconUrl = initialConfig.icon;
-
-    return {
-        metadataBase: new URL(siteConfig.url),
+    const metadata = createSeoMetadata(initialConfig.seo, {
         title: initialConfig.siteName,
         description: initialConfig.description,
+        canonical: '/',
+        siteName: initialConfig.siteName,
+        images: [initialConfig.logo, iconUrl].flatMap((url) =>
+            url ? [{ url, alt: initialConfig.siteName }] : [],
+        ),
+    });
+
+    return {
+        ...metadata,
         icons: iconUrl
             ? {
                   icon: [{ url: iconUrl }],
@@ -69,18 +76,6 @@ export async function generateMetadata(): Promise<Metadata> {
                   apple: [{ url: iconUrl }],
               }
             : undefined,
-        openGraph: {
-            title: initialConfig.siteName,
-            description: initialConfig.description,
-            url: siteConfig.url,
-            siteName: initialConfig.siteName,
-            type: 'website',
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: initialConfig.siteName,
-            description: initialConfig.description,
-        },
     };
 }
 

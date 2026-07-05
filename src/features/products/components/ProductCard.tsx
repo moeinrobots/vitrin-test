@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, Star } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
+import { getMediaAlt } from '@/shared/lib/seo';
 
 import type {
     ProductCardField,
@@ -41,7 +42,7 @@ export function ProductCard({ product, fields, view }: ProductCardProps) {
                 {imageUrl ? (
                     <Image
                         src={imageUrl}
-                        alt={product.title}
+                        alt={getMediaAlt(product.image, product.title)}
                         className="size-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                         fill
                         sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"

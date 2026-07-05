@@ -1,8 +1,23 @@
 import {
     getPathAvailability,
     getInitialSiteConfig,
+    getPageSeo,
 } from '@/shared/lib/initial-config';
 import { MaintenanceScreen } from '@/shared/components/shared/MaintenanceScreen';
+import { createSeoMetadata } from '@/shared/lib/seo';
+import type { Metadata } from 'next';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const config = await getInitialSiteConfig();
+
+    return createSeoMetadata(getPageSeo(config, '/about'), {
+        title: 'درباره ما',
+        description: config.description,
+        canonical: '/about',
+        siteName: config.siteName,
+        images: config.seo?.images,
+    });
+}
 
 export default async function AboutPage() {
     const config = await getInitialSiteConfig();

@@ -3,7 +3,21 @@ import { ArrowLeft, ShieldCheck } from 'lucide-react';
 
 import { Button } from '@/shared/components/ui/button';
 import { SiteShell } from '@/shared/components/layout/SiteShell';
-import { getInitialSiteConfig } from '@/shared/lib/initial-config';
+import { getInitialSiteConfig, getPageSeo } from '@/shared/lib/initial-config';
+import { createSeoMetadata } from '@/shared/lib/seo';
+import type { Metadata } from 'next';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const config = await getInitialSiteConfig();
+
+    return createSeoMetadata(getPageSeo(config, '/') ?? config.seo, {
+        title: config.siteName,
+        description: config.description,
+        canonical: '/',
+        siteName: config.siteName,
+        images: config.seo?.images,
+    });
+}
 
 export default async function Home() {
     const initialConfig = await getInitialSiteConfig();

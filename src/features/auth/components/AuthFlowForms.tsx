@@ -11,11 +11,6 @@ import {
     verifyOtp,
 } from '@/features/auth/api/auth.client';
 import { getAuthHref } from '@/features/auth/lib/auth-query';
-import {
-    clearStoredAuthPhone,
-    getStoredAuthPhone,
-    setStoredAuthPhone,
-} from '@/features/auth/lib/auth-session';
 import { ApiError } from '@/shared/lib/api-error';
 import { Button } from '@/shared/components/ui/button';
 import { useAppStore } from '@/shared/stores';
@@ -45,7 +40,7 @@ export function SignInMethodForm({ next }: AuthFormProps) {
         const intent = submitter?.value ?? 'otp';
         const phone = String(formData.get('phone') ?? '').trim();
 
-        setStoredAuthPhone(phone);
+        // setStoredAuthPhone(phone);
 
         if (intent === 'password') {
             router.push(getAuthHref('/signin/pwd', { next }));
@@ -107,7 +102,7 @@ export function SignInMethodForm({ next }: AuthFormProps) {
 
 export function SignInOtpForm({ next }: AuthFormProps) {
     const router = useRouter();
-    const [phone, setPhone] = useState(getStoredAuthPhone);
+    // const [phone, setPhone] = useState(getStoredAuthPhone);
     const [isPending, setIsPending] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
@@ -122,7 +117,6 @@ export function SignInOtpForm({ next }: AuthFormProps) {
         try {
             const result = await verifyOtp({ code: +otp });
             applyAuthResult(result);
-            clearStoredAuthPhone();
             router.replace(next || defaultRedirect);
         } catch (error) {
             setMessage(getAuthErrorMessage(error));
@@ -133,24 +127,6 @@ export function SignInOtpForm({ next }: AuthFormProps) {
 
     return (
         <form className="grid gap-4" onSubmit={handleSubmit}>
-            <AuthField id="phone" label="شماره موبایل">
-                <AuthInput
-                    autoComplete="tel"
-                    dir="ltr"
-                    id="phone"
-                    inputMode="tel"
-                    name="phone"
-                    onChange={(event) => {
-                        setPhone(event.target.value);
-                        setStoredAuthPhone(event.target.value);
-                    }}
-                    pattern="^09[0-9]{9}$"
-                    placeholder="09123456789"
-                    required
-                    type="tel"
-                    value={phone}
-                />
-            </AuthField>
             <AuthField id="otp" label="کد تایید">
                 <AuthInput
                     autoComplete="one-time-code"
@@ -182,7 +158,6 @@ export function SignInOtpForm({ next }: AuthFormProps) {
 
 export function SignInPasswordForm({ next }: AuthFormProps) {
     const router = useRouter();
-    const [phone, setPhone] = useState(getStoredAuthPhone);
     const [isPending, setIsPending] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
@@ -192,16 +167,14 @@ export function SignInPasswordForm({ next }: AuthFormProps) {
         setIsPending(true);
 
         const formData = new FormData(event.currentTarget);
-        const currentPhone = phone.trim();
         const password = String(formData.get('password') ?? '');
 
         try {
             const result = await loginWithPassword({
-                username: currentPhone,
+                username: String(formData.get('username')),
                 password,
             });
             applyAuthResult(result);
-            clearStoredAuthPhone();
             router.replace(next || defaultRedirect);
         } catch (error) {
             setMessage(getAuthErrorMessage(error));
@@ -212,24 +185,6 @@ export function SignInPasswordForm({ next }: AuthFormProps) {
 
     return (
         <form className="grid gap-4" onSubmit={handleSubmit}>
-            <AuthField id="phone" label="شماره موبایل">
-                <AuthInput
-                    autoComplete="tel"
-                    dir="ltr"
-                    id="phone"
-                    inputMode="tel"
-                    name="phone"
-                    onChange={(event) => {
-                        setPhone(event.target.value);
-                        setStoredAuthPhone(event.target.value);
-                    }}
-                    pattern="^09[0-9]{9}$"
-                    placeholder="09123456789"
-                    required
-                    type="tel"
-                    value={phone}
-                />
-            </AuthField>
             <AuthField id="password" label="رمز عبور">
                 <AuthInput
                     autoComplete="current-password"
@@ -271,12 +226,9 @@ export function SignUpForm({ next }: AuthFormProps) {
         const password1 = String(formData.get('phone') ?? '').trim();
         const password2 = String(formData.get('password') ?? '');
 
-        setStoredAuthPhone(username);
-
         try {
             const result = await signup({ username, password1, password2 });
             applyAuthResult(result);
-            clearStoredAuthPhone();
             router.replace(next || defaultRedirect);
         } catch (error) {
             setMessage(getAuthErrorMessage(error));

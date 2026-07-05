@@ -12,7 +12,7 @@ import { useAppStore } from '@/shared/stores';
 
 function handleAuthError(error: unknown) {
     if (!(error instanceof ApiError)) return;
-    if (error.status !== 401 && error.status !== 403) return;
+    if (error.status !== 401) return;
 
     useAppStore.getState().logout();
 

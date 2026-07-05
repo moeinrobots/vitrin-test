@@ -1,8 +1,23 @@
 import {
     getInitialSiteConfig,
+    getPageSeo,
     getPathAvailability,
 } from '@/shared/lib/initial-config';
 import { MaintenanceScreen } from '@/shared/components/shared/MaintenanceScreen';
+import { createSeoMetadata } from '@/shared/lib/seo';
+import type { Metadata } from 'next';
+
+export async function generateMetadata(): Promise<Metadata> {
+    const config = await getInitialSiteConfig();
+
+    return createSeoMetadata(getPageSeo(config, '/cart'), {
+        title: 'سبد خرید',
+        description: config.description,
+        canonical: '/cart',
+        siteName: config.siteName,
+        images: config.seo?.images,
+    });
+}
 
 export default async function CartPage() {
     const config = await getInitialSiteConfig();

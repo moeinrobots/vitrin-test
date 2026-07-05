@@ -12,6 +12,7 @@ type NormalizedRedirectRule = {
     permanent: boolean;
 };
 
+// constants
 const REDIRECTS_ENDPOINT =
     process.env.NEXT_PUBLIC_REDIRECTS_ENDPOINT ?? '/config';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -32,6 +33,8 @@ let redirectsCache:
 
 export async function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
+
+    // check and apply redirects
     const normalizedPathname = normalizePathname(pathname);
     const redirects = await getRedirects();
     const redirect = redirects.find(
@@ -44,8 +47,9 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(url, redirect.permanent ? 308 : 307);
     }
 
+    // check public and private routes
     const token = request.cookies.get(TOKEN_COOKIE_NAME)?.value;
-    const isAuthenticated = Boolean(token);
+    const isAuthenticated = token ? await isValidToken(token) : false;
 
     if (!isAuthenticated && isRouteMatch(pathname, privateRoutes)) {
         const signinUrl = new URL(SIGNIN_PATH, request.url);
@@ -69,6 +73,7 @@ export const config = {
     ],
 };
 
+// helper functions
 async function getRedirects() {
     const configBaseUrl = getConfigBaseUrl();
 
@@ -109,6 +114,18 @@ async function getRedirects() {
     }
 }
 
+async function isValidToken(token: string) {
+    const configBaseUrl = getConfigBaseUrl();
+    const response = await fetch(new URL(REDIRECTS_ENDPOINT, configBaseUrl), {
+        headers: {
+            Accept: 'application/json',
+            Token: `${token}`,
+        },
+    });
+    if (response.status == 401) return false;
+    return true;
+}
+
 function getConfigBaseUrl() {
     if (process.env.NEXT_PUBLIC_CONFIG_BASE_URL) {
         return process.env.NEXT_PUBLIC_CONFIG_BASE_URL;
@@ -141,6 +158,7 @@ function normalizeRedirect(rule: unknown) {
     ];
 }
 
+// for remove "/" of at end of urls.
 function normalizePathname(pathname: string) {
     const normalized =
         pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;

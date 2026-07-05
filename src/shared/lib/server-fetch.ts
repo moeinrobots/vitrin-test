@@ -42,7 +42,7 @@ export async function serverFetch<T>(
         },
     });
 
-    if (authRedirect && (response.status === 401 || response.status === 403)) {
+    if (authRedirect && response.status === 401) {
         const { redirect } = await import('next/navigation');
 
         redirect('/api/auth/logout?next=/signin');

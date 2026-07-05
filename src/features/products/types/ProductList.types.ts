@@ -1,4 +1,5 @@
 import { allowedQueryKeys } from '../utils/PorductList.constants';
+import type { SeoConfig } from '@/shared/lib/seo';
 
 // product list types
 export interface ProductResponse {
@@ -32,6 +33,24 @@ export interface ProductResult {
     brand_data?: ProductBrand | null;
     categories?: ProductCategory[];
     category_data?: ProductCategory[];
+    created_date?: string;
+    updated_date?: string;
+    created_at?: string;
+    updated_at?: string;
+    seo?: SeoConfig;
+    meta?: SeoConfig;
+    metadata?: SeoConfig;
+    metaTitle?: string;
+    meta_title?: string;
+    metaDescription?: string;
+    meta_description?: string;
+    keywords?: string[] | string;
+    canonical?: string;
+    canonicalUrl?: string;
+    canonical_url?: string;
+    openGraph?: SeoConfig;
+    open_graph?: SeoConfig;
+    og?: SeoConfig;
 }
 
 export interface MediaType {
@@ -45,6 +64,13 @@ export interface MediaType {
     width?: number;
     height?: number;
     mode?: string;
+    alt?: string;
+    alternativeText?: string;
+    title?: string;
+    description?: string;
+    caption?: string;
+    seo?: SeoConfig;
+    meta?: SeoConfig;
     thumbnails?: MediaThumbnail[];
 }
 
@@ -52,6 +78,15 @@ export interface MediaThumbnail {
     id: number;
     f: string;
     size: number;
+    alt?: string;
+    alternativeText?: string;
+    title?: string;
+    description?: string;
+    caption?: string;
+    width?: number;
+    height?: number;
+    seo?: SeoConfig;
+    meta?: SeoConfig;
 }
 
 export interface ProductBrand {

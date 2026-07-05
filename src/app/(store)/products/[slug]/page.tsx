@@ -4,6 +4,11 @@ import {
     getProducts,
 } from '@/features/products/api/products.server';
 import { ProductDetail } from '@/features/products/components/ProductDetail';
+import {
+    createSeoMetadata,
+    getMediaAlt,
+    normalizeSeoConfig,
+} from '@/shared/lib/seo';
 import type { Metadata } from 'next';
 
 type ProductDetailPageProps = {
@@ -35,22 +40,7 @@ export async function generateMetadata({
         };
     }
 
-    return {
-        title: product.title,
-        description: product.excerpt || product.price_notes || product.title,
-        openGraph: {
-            title: product.title,
-            description: product.excerpt || product.title,
-            images: product.image?.f ? [product.image.f] : undefined,
-            type: 'website',
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title: product.title,
-            description: product.excerpt || product.title,
-            images: product.image?.f ? [product.image.f] : undefined,
-        },
-    };
+    return createProductMetadata(product);
 }
 
 export default async function ProductDetailPage({
@@ -105,5 +95,43 @@ export default async function ProductDetailPage({
             />
             <ProductDetail product={product} />
         </>
+    );
+}
+
+function createProductMetadata(
+    product: Awaited<ReturnType<typeof getProductBySlug>>,
+) {
+    if (!product) {
+        return {
+            title: 'محصول پیدا نشد',
+        };
+    }
+
+    const image = product.image?.f
+        ? [
+              {
+                  url: product.image.f,
+                  alt: getMediaAlt(product.image, product.title),
+                  width: product.image.width,
+                  height: product.image.height,
+              },
+          ]
+        : undefined;
+
+    return createSeoMetadata(
+        normalizeSeoConfig(product, {
+            title: product.title,
+            description:
+                product.excerpt || product.price_notes || product.title,
+            canonical: `/products/${product.slug}`,
+            images: image,
+        }),
+        {
+            title: product.title,
+            description:
+                product.excerpt || product.price_notes || product.title,
+            canonical: `/products/${product.slug}`,
+            images: image,
+        },
     );
 }
