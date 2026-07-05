@@ -1,4 +1,4 @@
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://vtb1.hamgam.online';
 
 export type ApiQuery = Record<
     string,

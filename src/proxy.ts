@@ -15,7 +15,7 @@ type NormalizedRedirectRule = {
 // constants
 const REDIRECTS_ENDPOINT =
     process.env.NEXT_PUBLIC_REDIRECTS_ENDPOINT ?? '/config';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://vtb1.hamgam.online';
 const DEV_CONFIG_BASE_URL = 'http://localhost:8000';
 const REDIRECTS_CACHE_TTL_MS = 60_000;
 const TOKEN_COOKIE_NAME = 'token';
