@@ -20,8 +20,10 @@ export type SiteRedirectRule = {
 export type MaintenanceConfig = {
     enabled: boolean;
     scope: 'all' | 'pages';
+    mode: PageAvailabilityMode;
     pages: PageAvailabilityConfig[];
     message?: string;
+    workingHours?: string;
 };
 
 export type PageAvailabilityMode = 'maintenance' | 'offHours';
@@ -88,7 +90,7 @@ export type InitialSiteConfig = {
 type InitialConfigResponse = Record<string, unknown>;
 
 const CONFIG_ENDPOINT = '/config';
-const DEV_CONFIG_ENDPOINT = 'http://localhost:8000/config';
+const DEV_CONFIG_ENDPOINT = 'http://localhost:8001/config';
 const DEFAULT_PRODUCT_CARD_FIELDS: ProductCardField[] = [
     'brand',
     'rating',
@@ -101,6 +103,12 @@ const CONFIG_REVALIDATE_SECONDS = 60;
 
 export const getInitialSiteConfig = cache(
     async (): Promise<InitialSiteConfig> => {
+        const configUrl = getConfiguredInitialConfigUrl();
+
+        if (configUrl) {
+            return fetchInitialSiteConfig(configUrl);
+        }
+
         if (process.env.NODE_ENV !== 'production') {
             return getDevelopmentInitialSiteConfig();
         }
@@ -145,8 +153,9 @@ export function getPathAvailability(
     if (config.maintenance.scope === 'all') {
         return {
             path: normalizePathname(pathname),
-            mode: 'maintenance',
+            mode: config.maintenance.mode,
             message: config.maintenance.message,
+            workingHours: config.maintenance.workingHours,
         };
     }
 
@@ -183,6 +192,44 @@ async function getDevelopmentInitialSiteConfig() {
         return normalizeInitialSiteConfig(config);
     } catch {
         return getFallbackInitialSiteConfig();
+    }
+}
+
+async function fetchInitialSiteConfig(input: string | URL) {
+    try {
+        const response = await fetch(input, {
+            next: {
+                revalidate: CONFIG_REVALIDATE_SECONDS,
+                tags: ['app-config'],
+            },
+            headers: {
+                Accept: 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            return getFallbackInitialSiteConfig();
+        }
+
+        const config = (await response.json()) as InitialConfigResponse;
+
+        return normalizeInitialSiteConfig(config);
+    } catch {
+        return getFallbackInitialSiteConfig();
+    }
+}
+
+function getConfiguredInitialConfigUrl() {
+    const configBaseUrl =
+        process.env.NEXT_PUBLIC_CONFIG_BASE_URL ??
+        process.env.DEV_CONFIG_BASE_URL;
+
+    if (!configBaseUrl) return undefined;
+
+    try {
+        return new URL(CONFIG_ENDPOINT, configBaseUrl);
+    } catch {
+        return undefined;
     }
 }
 
@@ -275,8 +322,13 @@ function normalizeMaintenanceConfig(
     return {
         enabled: getBoolean(maintenance?.enabled) ?? false,
         scope,
+        mode: getAvailabilityMode(maintenance?.mode ?? maintenance?.type),
         pages: normalizePageAvailability(maintenance?.pages),
         message: getString(maintenance?.message),
+        workingHours:
+            getString(maintenance?.workingHours) ??
+            getString(maintenance?.hours) ??
+            getWorkingHoursRange(maintenance?.workingHours),
     };
 }
 
@@ -335,6 +387,7 @@ function getFallbackInitialSiteConfig(): InitialSiteConfig {
         maintenance: {
             enabled: false,
             scope: 'all',
+            mode: 'maintenance',
             pages: [],
         },
     };
