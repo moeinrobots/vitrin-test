@@ -91,7 +91,9 @@ export default async function RootLayout({
     const page = isProjectUnderMaintenance(initialConfig) ? (
         <MaintenanceScreen
             siteName={initialConfig.siteName}
+            mode={initialConfig.maintenance.mode}
             message={initialConfig.maintenance.message}
+            workingHours={initialConfig.maintenance.workingHours}
         />
     ) : (
         children

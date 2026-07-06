@@ -1,4 +1,3 @@
-import React from 'react';
 import { getInitialSiteConfig, getPageSeo } from '@/shared/lib/initial-config';
 import { createSeoMetadata } from '@/shared/lib/seo';
 import type { Metadata } from 'next';

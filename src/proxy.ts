@@ -12,12 +12,30 @@ type NormalizedRedirectRule = {
     permanent: boolean;
 };
 
+type PageMaintenanceMode = 'maintenance' | 'offHours';
+
+type NormalizedPageMaintenanceRule = {
+    path: string;
+    mode: PageMaintenanceMode;
+};
+
+type RuntimeConfig = {
+    redirects: NormalizedRedirectRule[];
+    maintenance: {
+        enabled: boolean;
+        scope: 'all' | 'pages';
+        pages: NormalizedPageMaintenanceRule[];
+    };
+};
+
 // constants
-const REDIRECTS_ENDPOINT =
-    process.env.NEXT_PUBLIC_REDIRECTS_ENDPOINT ?? '/config';
+const RUNTIME_CONFIG_ENDPOINT =
+    process.env.NEXT_PUBLIC_CONFIG_ENDPOINT ?? '/config';
+const AUTH_CHECK_ENDPOINT =
+    process.env.NEXT_PUBLIC_REDIRECTS_ENDPOINT ?? RUNTIME_CONFIG_ENDPOINT;
 const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://vtb1.hamgam.online';
-const DEV_CONFIG_BASE_URL = 'http://localhost:8000';
+const DEV_CONFIG_BASE_URL = 'http://localhost:8001';
 const REDIRECTS_CACHE_TTL_MS = 60_000;
 const TOKEN_COOKIE_NAME = 'token';
 const SIGNIN_PATH = '/signin';
@@ -25,20 +43,21 @@ const AUTHENTICATED_HOME_PATH = '/panel';
 
 const privateRoutes = ['/panel', '/checkout'];
 const authRoutes = ['/signin', '/signup'];
-let redirectsCache:
+const MAINTENANCE_PATH = '/maintenance';
+let runtimeConfigCache:
     | {
           expiresAt: number;
-          redirects: NormalizedRedirectRule[];
+          config: RuntimeConfig;
       }
     | undefined;
 
 export async function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
+    const runtimeConfig = await getRuntimeConfig();
 
     // check and apply redirects
     const normalizedPathname = normalizePathname(pathname);
-    const redirects = await getRedirects();
-    const redirect = redirects.find(
+    const redirect = runtimeConfig.redirects.find(
         (item) => normalizePathname(item.source) === normalizedPathname,
     );
 
@@ -46,6 +65,20 @@ export async function proxy(request: NextRequest) {
         const url = new URL(redirect.destination, request.url);
 
         return NextResponse.redirect(url, redirect.permanent ? 308 : 307);
+    }
+
+    const pageMaintenance = getPageMaintenance(
+        runtimeConfig,
+        normalizedPathname,
+    );
+
+    if (pageMaintenance && normalizedPathname !== MAINTENANCE_PATH) {
+        const url = request.nextUrl.clone();
+        url.pathname = MAINTENANCE_PATH;
+        url.search = '';
+        url.searchParams.set('path', normalizedPathname);
+
+        return NextResponse.rewrite(url);
     }
 
     // check public and private routes
@@ -75,18 +108,18 @@ export const config = {
 };
 
 // helper functions
-async function getRedirects() {
+async function getRuntimeConfig(): Promise<RuntimeConfig> {
     const configBaseUrl = getConfigBaseUrl();
 
-    if (!configBaseUrl) return [];
+    if (!configBaseUrl) return getEmptyRuntimeConfig();
 
-    if (redirectsCache && redirectsCache.expiresAt > Date.now()) {
-        return redirectsCache.redirects;
+    if (runtimeConfigCache && runtimeConfigCache.expiresAt > Date.now()) {
+        return runtimeConfigCache.config;
     }
 
     try {
         const response = await fetch(
-            new URL(REDIRECTS_ENDPOINT, configBaseUrl),
+            new URL(RUNTIME_CONFIG_ENDPOINT, configBaseUrl),
             {
                 headers: {
                     Accept: 'application/json',
@@ -94,30 +127,25 @@ async function getRedirects() {
             },
         );
 
-        if (!response.ok) return [];
+        if (!response.ok) return getEmptyRuntimeConfig();
 
         const payload = (await response.json()) as unknown;
-        const redirects = Array.isArray(payload)
-            ? payload
-            : isRecord(payload) && Array.isArray(payload.redirects)
-              ? payload.redirects
-              : [];
+        const config = normalizeRuntimeConfig(payload);
 
-        const normalizedRedirects = redirects.flatMap(normalizeRedirect);
-        redirectsCache = {
+        runtimeConfigCache = {
             expiresAt: Date.now() + REDIRECTS_CACHE_TTL_MS,
-            redirects: normalizedRedirects,
+            config,
         };
 
-        return normalizedRedirects;
+        return config;
     } catch {
-        return [];
+        return getEmptyRuntimeConfig();
     }
 }
 
 async function isValidToken(token: string) {
     const configBaseUrl = getConfigBaseUrl();
-    const response = await fetch(new URL(REDIRECTS_ENDPOINT, configBaseUrl), {
+    const response = await fetch(new URL(AUTH_CHECK_ENDPOINT, configBaseUrl), {
         headers: {
             Accept: 'application/json',
             Token: `${token}`,
@@ -159,10 +187,97 @@ function normalizeRedirect(rule: unknown) {
     ];
 }
 
+function normalizeRuntimeConfig(payload: unknown): RuntimeConfig {
+    const config = getConfigRecord(payload);
+    const redirects = Array.isArray(payload)
+        ? payload
+        : Array.isArray(config?.redirects)
+          ? config.redirects
+          : [];
+
+    return {
+        redirects: redirects.flatMap(normalizeRedirect),
+        maintenance: normalizeMaintenance(config?.maintenance),
+    };
+}
+
+function getConfigRecord(payload: unknown) {
+    const record = getRecord(payload);
+    const nestedConfig = getRecord(record?.config);
+
+    return nestedConfig ?? record;
+}
+
+function normalizeMaintenance(value: unknown): RuntimeConfig['maintenance'] {
+    const maintenance = getRecord(value);
+    const scope =
+        maintenance?.scope === 'pages' || maintenance?.scope === 'all'
+            ? maintenance.scope
+            : 'all';
+
+    return {
+        enabled: getBoolean(maintenance?.enabled) ?? false,
+        scope,
+        pages: normalizePageMaintenance(maintenance?.pages),
+    };
+}
+
+function normalizePageMaintenance(value: unknown) {
+    if (!Array.isArray(value)) return [];
+
+    return value.flatMap<NormalizedPageMaintenanceRule>((item) => {
+        const page = getRecord(item);
+        const path =
+            getString(item) ??
+            getString(page?.path) ??
+            getString(page?.page) ??
+            getString(page?.route);
+
+        if (!path) return [];
+
+        return [
+            {
+                path: normalizePathname(path),
+                mode: page?.mode === 'offHours' ? 'offHours' : 'maintenance',
+            },
+        ];
+    });
+}
+
+function getPageMaintenance(config: RuntimeConfig, pathname: string) {
+    if (!config.maintenance.enabled) return null;
+    if (config.maintenance.scope === 'all') {
+        return {
+            path: pathname,
+            mode: 'maintenance' as const,
+        };
+    }
+
+    return (
+        config.maintenance.pages.find((page) => page.path === pathname) ?? null
+    );
+}
+
+function getEmptyRuntimeConfig(): RuntimeConfig {
+    return {
+        redirects: [],
+        maintenance: {
+            enabled: false,
+            scope: 'all',
+            pages: [],
+        },
+    };
+}
+
 // for remove "/" of at end of urls.
 function normalizePathname(pathname: string) {
+    const withLeadingSlash = pathname.startsWith('/')
+        ? pathname
+        : `/${pathname}`;
     const normalized =
-        pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname;
+        withLeadingSlash.length > 1
+            ? withLeadingSlash.replace(/\/+$/, '')
+            : withLeadingSlash;
 
     return normalized || '/';
 }
@@ -187,6 +302,10 @@ function getBoolean(value: unknown) {
     if (value === 'false') return false;
 
     return undefined;
+}
+
+function getRecord(value: unknown) {
+    return isRecord(value) ? value : undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
