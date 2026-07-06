@@ -3,7 +3,6 @@ import localFont from 'next/font/local';
 
 import {
     getInitialSiteConfig,
-    isProjectUnderMaintenance,
 } from '@/shared/lib/initial-config';
 import {
     createRuntimeThemeCss,
@@ -12,7 +11,6 @@ import {
 import { cn } from '@/shared/lib/utils';
 import { createSeoMetadata } from '@/shared/lib/seo';
 import { AppProvider } from '@/shared/providers/AppProvider';
-import { MaintenanceScreen } from '@/shared/components/shared/MaintenanceScreen';
 
 import '../shared/styles/globals.css';
 
@@ -88,16 +86,6 @@ export default async function RootLayout({
     const runtimeThemeCss = createRuntimeThemeCss(
         normalizeRuntimeTheme(initialConfig.theme),
     );
-    const page = isProjectUnderMaintenance(initialConfig) ? (
-        <MaintenanceScreen
-            siteName={initialConfig.siteName}
-            mode={initialConfig.maintenance.mode}
-            message={initialConfig.maintenance.message}
-            workingHours={initialConfig.maintenance.workingHours}
-        />
-    ) : (
-        children
-    );
 
     return (
         <html
@@ -113,7 +101,7 @@ export default async function RootLayout({
                         dangerouslySetInnerHTML={{ __html: runtimeThemeCss }}
                     />
                 ) : null}
-                <AppProvider theme={initialConfig.theme}>{page}</AppProvider>
+                <AppProvider theme={initialConfig.theme}>{children}</AppProvider>
             </body>
         </html>
     );

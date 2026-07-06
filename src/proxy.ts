@@ -35,7 +35,7 @@ const AUTH_CHECK_ENDPOINT =
     process.env.NEXT_PUBLIC_REDIRECTS_ENDPOINT ?? RUNTIME_CONFIG_ENDPOINT;
 const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://vtb1.hamgam.online';
-const DEV_CONFIG_BASE_URL = 'http://localhost:8001';
+const DEV_CONFIG_BASE_URL = 'http://localhost:8000';
 const REDIRECTS_CACHE_TTL_MS = 60_000;
 const TOKEN_COOKIE_NAME = 'token';
 const SIGNIN_PATH = '/signin';
@@ -55,7 +55,7 @@ export async function proxy(request: NextRequest) {
     const { pathname, search } = request.nextUrl;
     const runtimeConfig = await getRuntimeConfig();
 
-    // check and apply redirects
+    // check and apply redirects.
     const normalizedPathname = normalizePathname(pathname);
     const redirect = runtimeConfig.redirects.find(
         (item) => normalizePathname(item.source) === normalizedPathname,
@@ -67,6 +67,7 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(url, redirect.permanent ? 308 : 307);
     }
 
+    // check and apply maintenance mode.
     const pageMaintenance = getPageMaintenance(
         runtimeConfig,
         normalizedPathname,
@@ -81,7 +82,7 @@ export async function proxy(request: NextRequest) {
         return NextResponse.rewrite(url);
     }
 
-    // check public and private routes
+    // check public and private routes.
     const token = request.cookies.get(TOKEN_COOKIE_NAME)?.value;
     const isAuthenticated = token ? await isValidToken(token) : false;
 
