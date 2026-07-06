@@ -1,9 +1,4 @@
-import {
-    getPathAvailability,
-    getInitialSiteConfig,
-    getPageSeo,
-} from '@/shared/lib/initial-config';
-import { MaintenanceScreen } from '@/shared/components/shared/MaintenanceScreen';
+import { getInitialSiteConfig, getPageSeo } from '@/shared/lib/initial-config';
 import { createSeoMetadata } from '@/shared/lib/seo';
 import type { Metadata } from 'next';
 
@@ -21,18 +16,6 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function AboutPage() {
     const config = await getInitialSiteConfig();
-    const availability = getPathAvailability(config, '/about');
-
-    if (availability) {
-        return (
-            <MaintenanceScreen
-                siteName={config.siteName}
-                mode={availability.mode}
-                message={availability.message ?? config.maintenance.message}
-                workingHours={availability.workingHours}
-            />
-        );
-    }
 
     return (
         <section className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-10 sm:px-6 lg:px-8">
