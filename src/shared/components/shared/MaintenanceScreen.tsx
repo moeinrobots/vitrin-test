@@ -1,17 +1,39 @@
+export type MaintenanceMode = 'maintenance' | 'offHours';
+
 type MaintenanceScreenProps = {
     siteName: string;
-    mode?: 'maintenance' | 'offHours';
+    mode?: MaintenanceMode;
+    title?: string;
     message?: string;
     workingHours?: string;
+};
+
+const modeContent: Record<
+    MaintenanceMode,
+    {
+        title: string;
+        message: string;
+    }
+> = {
+    maintenance: {
+        title: 'در حال تعمیر',
+        message: 'این بخش موقتاً در حال تعمیر است.',
+    },
+    offHours: {
+        title: 'خارج از ساعت کاری',
+        message: 'این بخش در حال حاضر خارج از ساعت کاری در دسترس نیست.',
+    },
 };
 
 export function MaintenanceScreen({
     siteName,
     mode = 'maintenance',
+    title,
     message,
     workingHours,
 }: MaintenanceScreenProps) {
     const isOffHours = mode === 'offHours';
+    const content = modeContent[mode];
 
     return (
         <main className="flex min-h-screen flex-1 items-center justify-center bg-background px-4">
@@ -20,13 +42,10 @@ export function MaintenanceScreen({
                     {siteName}
                 </p>
                 <h1 className="text-2xl font-semibold tracking-normal">
-                    {isOffHours ? 'خارج از ساعت کاری' : 'در حال تعمیر'}
+                    {title ?? content.title}
                 </h1>
                 <p className="text-sm leading-7 text-muted-foreground">
-                    {message ??
-                        (isOffHours
-                            ? 'این بخش در حال حاضر خارج از ساعت کاری در دسترس نیست.'
-                            : 'این بخش موقتاً در حال تعمیر است.')}
+                    {message ?? content.message}
                 </p>
                 {isOffHours && workingHours ? (
                     <div className="rounded-lg border bg-card px-4 py-3 text-sm">
